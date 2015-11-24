@@ -173,7 +173,7 @@ public class CompareModelVersionsUtil {
         if (runtime.equals("n")) {
             System.out.println("Not reporting on differences in the model for runtime resources/attributes.");
             compareRuntime = false;
-        } else if (differentVersions.equals("y")) {
+        } else if (runtime.equals("y")) {
             System.out.println("Reporting on differences in the model for runtime resources/attributes.");
             compareRuntime = true;
         } else {
