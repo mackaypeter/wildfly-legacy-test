@@ -415,16 +415,16 @@ public class CompareModelVersionsUtil {
     private void compareNillable(CompareContext context, String id, ModelNode current, ModelNode legacy) {
         boolean currentNillable = current.get(NILLABLE).asBoolean(false);
         boolean legacyNillable = legacy.get(NILLABLE).asBoolean(false);
-        if (currentNillable != legacyNillable) {
-            context.println("Different 'nillable' for " + id + ". Current: " + currentNillable + "; legacy: " + legacyNillable);
+        if (legacyNillable && !currentNillable) {
+            context.println("The " + id + " is no longer nillable.");
         }
     }
 
     private void compareExpressionsAllowed(CompareContext context, String id, ModelNode current, ModelNode legacy) {
-        boolean currentNillable = current.get(EXPRESSIONS_ALLOWED).asBoolean(false);
-        boolean legacyNillable = legacy.get(EXPRESSIONS_ALLOWED).asBoolean(false);
-        if (currentNillable != legacyNillable) {
-            context.println("Different 'expressions-allowed' for " + id + ". Current: " + currentNillable + "; legacy: " + legacyNillable);
+        boolean currentExpressionsAllowed = current.get(EXPRESSIONS_ALLOWED).asBoolean(false);
+        boolean legacyExpressionsAllowed = legacy.get(EXPRESSIONS_ALLOWED).asBoolean(false);
+        if (legacyExpressionsAllowed && !currentExpressionsAllowed) {
+            context.println("Expressions are no longer allowed for " + id + ".");
         }
     }
 
@@ -539,8 +539,9 @@ public class CompareModelVersionsUtil {
         }
 
         if (extraInLegacyAfterRuntime.size() > 0 || extraInCurrentAfterRuntime.size() > 0) {
-            context.println("Missing " + type +
-            		" in current: " + extraInLegacyAfterRuntime + "; missing in legacy " + extraInCurrentAfterRuntime);
+            if (extraInLegacy.size() > 0) {
+                context.println("These " + type + " are no longer available: " + extraInLegacy);
+            }
         }
 
         if (extraInCurrent.size() > 0) {
