@@ -99,27 +99,17 @@ public class CompareModelVersionsUtil {
     }
 
     public static void main(String[] args) throws Exception {
-
-        if(CompareModelVersionsUtil.class.getProtectionDomain().getCodeSource().getLocation().toString().endsWith(".jar")) {
-            throw new Exception("This currently does not work as a jar. Please import a clone of https://github.com/kabir/wildfly-legacy-test into your IDE");
-        }
-
         String version = System.getProperty("jboss.as.compare.version", null);
-        String fromTgt = System.getProperty("jboss.as.compare.from.target", null);
-        String differentVersions = System.getProperty("jboss.as.compare.different.versions", null);
         String type = System.getProperty("jboss.as.compare.type", null);
         String runtime = System.getProperty("jboss.as.compare.runtime", null);
-        Set subsystems = parseList(System.getProperty("jboss.as.compare.subsystems", null));
 
         if (version == null) {
-            System.out.print("Enter legacy AS version: ");
-            version = readInput(null);
+            throw new IllegalArgumentException("jboss.as.compare.version not set");
         }
         System.out.println("Using target model: " + version);
 
         if (type == null) {
-            System.out.print("Enter type [S](standalone)/H(host)/D(domain)/F(domain + host):");
-            type = readInput("S");
+            throw new IllegalArgumentException("jboss.as.compare.type not set");
         }
         final ResourceType[] resourceTypes;
         if (ResourceType.STANDALONE.toString().startsWith(type.toUpperCase())) {
@@ -134,40 +124,12 @@ public class CompareModelVersionsUtil {
             throw new IllegalArgumentException("Could not determine type for: '" + type + "'");
         }
 
-        if (fromTgt == null) {
-            System.out.print("Read from target directory or from the legacy-models directory - t/[l]:");
-            fromTgt = readInput("l");
-        }
+        final File fromDirectory = new File(Tools.getProjectDirectory(), "target");
 
-        final File fromDirectory;
-        if (fromTgt.equals("l")) {
-            //File projectDir = Tools.getProjectDirectory();
-            URL legacyModels = Thread.currentThread().getContextClassLoader().getResource("legacy-models");
-            fromDirectory = new File(legacyModels.toURI());
-        } else if (fromTgt.equals("t")) {
-            fromDirectory = new File(Tools.getProjectDirectory(), "target");
-        } else {
-            throw new IllegalArgumentException("Please enter 'l' for legacy-models directory or 't' for target directory");
-        }
+        boolean compareDifferentVersions = true;
 
-        if (differentVersions == null) {
-            System.out.print("Report on differences in the model when the management versions are different? y/[n]: ");
-            differentVersions = readInput("n").toLowerCase();
-        }
-        boolean compareDifferentVersions;
-        if (differentVersions.equals("n")) {
-            System.out.println("Not reporting on differences in the model when the management versions are different");
-            compareDifferentVersions = false;
-        } else if (differentVersions.equals("y")) {
-            System.out.println("Reporting on differences in the model when the management versions are different");
-            compareDifferentVersions = true;
-        } else {
-            throw new IllegalArgumentException("Please enter 'y' or 'n'");
-        }
-
-        if (runtime == null){
-            System.out.print("Report on differences in the model of runtime resources/attributes? y/[n]: ");
-            runtime = readInput("n").toLowerCase();
+        if (runtime == null) {
+            throw new IllegalArgumentException("jboss.as.compare.runtime not set");
         }
         boolean compareRuntime;
         if (runtime.equals("n")) {
@@ -180,10 +142,7 @@ public class CompareModelVersionsUtil {
             throw new IllegalArgumentException("Please enter 'y' or 'n'");
         }
 
-        if (subsystems == null) {
-            System.out.print("If you only want to report on differences of certain subsystems enter their names as a comma-separated list (e.g. 'ejb3,jmx'): ");
-            subsystems = parseList(readInput(""));
-        }
+        Set subsystems = parseList("");
 
         System.out.println("Loading legacy model versions for " + version + "....");
         ModelNode legacyModelVersions = Tools.loadModelNodeFromFile(new File(fromDirectory, "standalone-model-versions-" + version + ".dmr"));
@@ -228,23 +187,6 @@ public class CompareModelVersionsUtil {
         System.out.println("Starting comparison of the current....\n");
         compareModelVersionsUtil.compareModels();
         System.out.println("\nDone comparison of " + resourceType + "!");
-    }
-
-    private static String readInput(String defaultAnswer) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        char c = (char) System.in.read();
-        while (c != '\n') {
-            sb.append(c);
-            c = (char) System.in.read();
-        }
-        String s = sb.toString().trim();
-        if (s.equals("")) {
-            if (defaultAnswer != null) {
-                return defaultAnswer;
-            }
-            throw new IllegalArgumentException("Please enter a valid answer");
-        }
-        return s;
     }
 
     private void compareModels() {
