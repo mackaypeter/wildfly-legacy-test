@@ -199,6 +199,10 @@ public class Tools {
         try {
             String line = reader.readLine();
             while (line != null) {
+                // hackaround for line feed values
+                if (line.equals("\",")) {
+                    sb.append("\n");
+                }
                 sb.append(line);
                 line = reader.readLine();
             }
